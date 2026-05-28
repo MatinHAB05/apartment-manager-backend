@@ -22,7 +22,7 @@ func NewUserService(userRepo postgres.UserInterface, hasher *hasher.BcryptHasher
 func (s *UserService) Update(ctx context.Context, user dto.UpdateProfileRequest, id string) error {
 	d_user := domainRepo.UpdateProfileRequest{
 		FirstName: user.FirstName,
-		LastName:  user.Username,
+		LastName:  user.LastName,
 		Email:     user.Email,
 		Username:  user.Username,
 		Gender:    user.Gender,
@@ -44,20 +44,30 @@ func (s *UserService) Delete(ctx context.Context, id string) error {
 }
 
 func (s *UserService) GetById(ctx context.Context, id string) (*dto.UserProfileResponse, error) {
-	rawUser, err := s.UserRepo.GetById(ctx, id)
+	rawUser, unitNumber, err := s.UserRepo.GetById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	profile := &dto.UserProfileResponse{
-		UserId:    rawUser.ID.String(),
-		FirstName: rawUser.FirstName,
-		LastName:  rawUser.LastName,
-		Email:     rawUser.Email,
-		Username:  rawUser.Username,
-		Gender:    rawUser.Gender,
-		Role:      rawUser.Role,
+	if rawUser == nil {
+		return nil, nil
 	}
+
+	profile := &dto.UserProfileResponse{
+		ID:              rawUser.ID,
+		CreatedAt:       rawUser.CreatedAt,
+		ApartmentID:     rawUser.ApartmentID,
+		UnitNumber:      unitNumber,
+		FirstName:       rawUser.FirstName,
+		LastName:        rawUser.LastName,
+		Username:        rawUser.Username,
+		Email:           rawUser.Email,
+		Phone:           rawUser.Phone,
+		Role:            string(rawUser.Role),
+		Gender:          string(*rawUser.Gender),
+		ProfileImageURL: rawUser.ProfileImageURL,
+	}
+
 	return profile, nil
 }
 
